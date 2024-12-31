@@ -1,0 +1,33 @@
+services:
+  slipgate:
+    build:
+      context: ./pkg/slipgate
+    environment:
+      NODE_ENV: production
+      APP_URL: http://localhost:8080
+    restart: unless-stopped
+    networks:
+      - slipgatenet
+
+  dummy:
+    build:
+      context: ./pkg/dummy
+    restart: unless-stopped
+    networks:
+      - slipgatenet
+
+  gateway:
+    image: envoyproxy/envoy:v1.28-latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./pkg/gateway/envoy.yaml:/etc/envoy/envoy.yaml:ro
+    restart: unless-stopped
+    depends_on:
+      - slipgate
+      - dummy 
+    networks:
+      - slipgatenet
+
+networks:
+  slipgatenet:
